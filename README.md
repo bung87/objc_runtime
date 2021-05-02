@@ -1,4 +1,4 @@
-# objc_runtime  
+# objc_runtime  ![Build Status](https://github.com/bung87/objc_runtime/workflows/build/badge.svg)  
 
 objective-c runtime bindings provide macro `objcr` allow you write message sending style code  
 
