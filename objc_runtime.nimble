@@ -15,3 +15,4 @@ requires "regex"
 
 task test, "basic":
   exec "nimble c tests/test1.nim"
+  exec "nimble c -r tests/test2.nim"

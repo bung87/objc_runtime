@@ -785,4 +785,3 @@ macro objcr*(arg: untyped): untyped =
 
 func get_nsstring*(c_str: string): ID =
   return objc_msgSend(getClass("NSString").ID, registerName("stringWithUTF8String:"), c_str.cstring)
-
