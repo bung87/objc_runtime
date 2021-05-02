@@ -733,6 +733,8 @@ proc replaceBracket(node: NimNode): NimNode =
   var self = child[0]
   var args = child[1 .. ^1]
   self = extractSelf(self, args)
+  if self.kind == nnkIdent and self.strVal == "super":
+    newnode = newCall(bindSym"objc_msgSendSuper")
   newnode.add transformNode(self)
   var positionalArgs = args.filterIt(it.kind != nnkExprColonExpr)
   for pa in positionalArgs:
@@ -747,41 +749,77 @@ proc replaceBracket(node: NimNode): NimNode =
       newnode.add transformNode(a[1])
   return newnode
 
+proc replaceOne(one:NimNode):NimNode = 
+  case one.kind
+    of nnkLetSection:
+      if one[^1][^1].kind == nnkBracket:
+        var b = nnkLetSection.newTree()
+        copyChildrenTo(one, b)
+        b[^1][^1] = replaceBracket(one[^1][^1])
+        result = b
+      else:
+        result = one
+    of nnkVarSection:
+      if one[^1][^1].kind == nnkBracket:
+        var b = nnkVarSection.newTree()
+        copyChildrenTo(one, b)
+        b[^1][^1] = replaceBracket(one[^1][^1])
+        result = b
+      else:
+        result = one
+    of nnkAsgn:
+      if one[1].kind == nnkBracket:
+        var b = nnkAsgn.newTree()
+        copyChildrenTo(one, b)
+        b[1] = replaceBracket(one[1])
+        result =  b
+      else:
+        result = one
+    of nnkBracket:
+      result = replaceBracket(one)
+    of nnkDiscardStmt:
+      result = nnkDiscardStmt.newtree(replaceBracket(one[0]))
+    else:
+      result = one
 
 macro objcr*(arg: untyped): untyped =
   if arg.kind == nnkStmtList:
     result = newStmtList()
     for one in arg:
-      case one.kind
-      of nnkLetSection:
-        if one[^1][^1].kind == nnkBracket:
-          var b = nnkLetSection.newTree()
-          copyChildrenTo(one, b)
-          b[^1][^1] = replaceBracket(one[^1][^1])
-          result.add b
-        else:
-          result.add one
-      of nnkVarSection:
-        if one[^1][^1].kind == nnkBracket:
-          var b = nnkVarSection.newTree()
-          copyChildrenTo(one, b)
-          b[^1][^1] = replaceBracket(one[^1][^1])
-          result.add b
-        else:
-          result.add one
-      of nnkAsgn:
-        if one[1].kind == nnkBracket:
-          var b = nnkAsgn.newTree()
-          copyChildrenTo(one, b)
-          b[1] = replaceBracket(one[1])
-        else:
-          result.add one
-      of nnkBracket:
-        result.add replaceBracket(one)
-      else:
-        result.add one
+      result.add replaceOne(one)
+  elif arg.kind in {nnkProcDef, nnkLambda, nnkMethodDef}:
+    result = arg
+    var code = arg.body
+    result.body = nnkStmtList.newTree()
+    result.addPragma ident"cdecl"
+    result.addPragma ident"gcsafe"
+    var self = arg.params[1][0]
+    var superVal = nnkObjConstr.newTree(
+    ident("ObjcSuper"),
+      nnkExprColonExpr.newTree(
+        ident("receiver"),
+        self
+      ),
+      nnkExprColonExpr.newTree(
+        ident("superClass"),
+        nnkCall.newTree(
+          nnkDotExpr.newTree(
+            nnkCall.newTree(
+              nnkDotExpr.newTree(
+                self,
+                ident("getClass")
+              )
+            ),
+            ident("getSuperclass")
+          )
+        )
+      )
+    )
+    result.body.add nnkVarSection.newTree(nnkIdentDefs.newTree(ident"super",newEmptyNode(),superVal))
+    for one in code:
+      result.body.add replaceOne(one)
   else:
-    result = replaceBracket(arg)
+    result = replaceOne(arg)
 
 func get_nsstring*(c_str: string): ID =
   return objc_msgSend(getClass("NSString").ID, registerName("stringWithUTF8String:"), c_str.cstring)

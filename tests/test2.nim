@@ -15,10 +15,8 @@ when isMainModule:
   let ChildClass = allocateClassPair(getClass("BaseClass"), "ChildClass", 0)
   discard addIvar(ChildClass, "num", sizeof(int), 1 shl sizeof(int), "i")
 
-  proc setNum2(self: ID; cmd: SEL;) {.cdecl.} =
-    objcr:
-      var super = ObjcSuper(receiver: self, superClass: self.getClass().getSuperclass())
-      discard objc_msgSendSuper(super, $$"setNum")
+  proc setNum2(self: ID; cmd: SEL;) {.objcr.} =
+    discard [super setNum]
   discard ChildClass.replaceMethod($$"setNum", cast[IMP](setNum2), "v@")
   ChildClass.registerClassPair()
   
