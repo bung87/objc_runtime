@@ -11,3 +11,7 @@ srcDir        = "src"
 
 requires "nim >= 1.4.4"
 requires "https://github.com/yglukhov/darwin#master"
+requires "regex"
+
+task test, "basic":
+  exec "nimble c tests/test1.nim"

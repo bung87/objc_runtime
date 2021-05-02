@@ -1,12 +1,47 @@
-# This is just an example to get you started. You may wish to put all of your
-# tests into a single file, or separate them into multiple `test1`, `test2`
-# etc. files (better names are recommended, just make sure the name starts with
-# the letter 't').
-#
-# To run these tests, simply execute `nimble test`.
-
-import unittest
-
 import objc_runtime
-test "can add":
-  check add(5, 5) == 10
+import darwin / [ app_kit, foundation]
+
+var NSApp {.importc.}: ID
+
+proc main() =
+  func createMenuItem(title: ID | NSString, action: string, key: string): ID =
+    result = objc_msgSend(getClass("NSMenuItem").ID, registerName("alloc"))
+    objc_msgSend(result, registerName("initWithTitle:action:keyEquivalent:"),
+                title, if action != "": registerName(action) else: nil, get_nsstring(key))
+    objc_msgSend(result, registerName("autorelease"))
+
+  objcr:
+    [NSApplication sharedApplication]
+
+    if NSApp.isNil:
+      echo "Failed to initialized NSApplication...  terminating..."
+      return
+    [NSApp setActivationPolicy: NSApplicationActivationPolicyRegular]
+
+    var menuBar = [[NSMenu alloc]init]
+    var appMenuItem = [[NSMenuItem alloc]init]
+    var appMenu = [[NSMenu alloc]init]
+
+    var quitTitle = @"Quit"
+    var quitMenuItem = createMenuItem(quitTitle, "terminate:", "q")
+    [appMenu addItem: quitMenuItem]
+    [appMenuItem setSubmenu: appMenu]
+
+    [menuBar addItem: appMenuItem]
+    [NSApp setMainMenu: menuBar]
+
+    var mainWindow = [NSWindow alloc]
+    var rect = NSMakeRect(0, 0, 200, 200)
+    [mainWindow initWithContentRect: rect, styleMask:  NSWindowStyleMaskTitled or NSWindowStyleMaskClosable or NSWindowStyleMaskMiniaturizable or NSWindowStyleMaskResizable, backing: NSBackingStoreBuffered,
+        `defer`: false]
+
+    var pos = NSMakePoint(20,20)
+    [mainWindow cascadeTopLeftFromPoint: pos]
+    [mainWindow setTitle: "Hello"]
+    [mainWindow makeKeyAndOrderFront: NSApp]
+    [NSApp activateIgnoringOtherApps: true]
+    [NSApp run]
+
+
+when isMainModule:
+  main()
