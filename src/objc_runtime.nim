@@ -823,3 +823,57 @@ macro objcr*(arg: untyped): untyped =
 
 func get_nsstring*(c_str: string): ID =
   return objc_msgSend(getClass("NSString").ID, registerName("stringWithUTF8String:"), c_str.cstring)
+
+proc encodeType*[T](t:typedesc[T]):string =
+  # https://nshipster.com/type-encodings/
+  when t is char:
+    return "c"
+  elif t is cuchar:
+    return "C"
+  elif t is int:
+    return "i"
+  elif t is uint:
+    return "I"
+  elif t is cshort:
+    return "s"
+  elif t is cushort:
+    return "S"
+  elif t is int32:
+    return "l"
+  elif t is uint32:
+    return "L"
+  elif t is int64:
+    return "q"
+  elif t is uint64:
+    return "Q"
+  elif t is cfloat:
+    return "f"
+  elif t is cdouble:
+    return "d"
+  elif t is bool:
+    return "B"
+  elif t is cstring:
+    return "*"
+  elif t is Class:
+    return "#"
+  elif t is typedesc[NSObject]:
+    return "#"
+  elif t is NSObject:
+    return "@"
+  elif t is ID:
+    return "@"
+  elif t is SEL:
+    return ":"
+  elif t is void:
+    return "v"
+
+macro getProcEncode*(y: typed):untyped =
+  var x = y.getImpl()
+  var j = newCall(bindSym"join")
+  var ab = nnkBracket.newTree()
+  for p in x.params:
+    ab.add newCall(ident"encodeType",if p.kind == nnkEmpty: ident"void" else: newCall(ident"type", p[1]))
+  var aseq = nnkPrefix.newTree(ident("@"), ab)
+  j.add aseq
+  j.add newLit("")
+  result = nnkPar.newTree(j)

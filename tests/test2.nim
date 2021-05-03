@@ -1,25 +1,25 @@
 import objc_runtime
 import darwin / [ app_kit, foundation]
 
+
 when isMainModule:
   let BaseClass = allocateClassPair(getClass("NSObject"), "BaseClass", 0)
-  discard addIvar(BaseClass, "num", sizeof(int), 1 shl sizeof(int), "i")
+  discard addIvar(BaseClass, "num", sizeof(int), 1 shl sizeof(int), encodeType(int))
   let NumIvar: Ivar = getIvar(BaseClass, "num")
   proc setNum(self: ID; cmd: SEL;) {.cdecl.} =
     objcr:
       var i = [NSNumber numberWithInt:2]
       setIvar(self, NumIvar, i)
-  discard BaseClass.addMethod($$"setNum", cast[IMP](setNum), "v@")
+  discard BaseClass.addMethod($$"setNum", cast[IMP](setNum), getProcEncode( setNum))
   BaseClass.registerClassPair()
 
   let ChildClass = allocateClassPair(getClass("BaseClass"), "ChildClass", 0)
-  discard addIvar(ChildClass, "num", sizeof(int), 1 shl sizeof(int), "i")
 
   proc setNum2(self: ID; cmd: SEL;) {.objcr.} =
     discard [super setNum]
-  discard ChildClass.replaceMethod($$"setNum", cast[IMP](setNum2), "v@")
+  discard ChildClass.replaceMethod($$"setNum", cast[IMP](setNum2), getProcEncode( setNum2))
   ChildClass.registerClassPair()
-  
+
   objcr:
     var base = [[BaseClass alloc] init]
     [base setNum]
