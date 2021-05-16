@@ -37,7 +37,7 @@ type
     receiver*: ID
     superClass*: Class
 
-  objc_property_attribute_t = object
+  objc_property_attribute_t* = object
     name: cstring
     value: cstring
 
