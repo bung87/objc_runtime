@@ -38,8 +38,8 @@ type
     superClass*: Class
 
   objc_property_attribute_t* = object
-    name: cstring
-    value: cstring
+    name*: cstring
+    value*: cstring
 
   PropertyAttribute* = object
     name*: string
