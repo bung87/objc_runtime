@@ -741,7 +741,7 @@ proc replaceBracket(node: NimNode): NimNode =
     newnode.add transformNode(pa)
   var namedArgs = args.filterIt(it.kind == nnkExprColonExpr)
   if namedArgs.len > 0:
-    var names = namedArgs.mapIt(if it[0].kind != nnkAccQuoted: it[0].strVal() else: it[0][0].strVal())
+    var names = namedArgs.mapIt(if it[0].kind != nnkAccQuoted : it[0].strVal() else: it[0][0].strVal())
     let name = names.join(":") & ":"
     # var values = namedArgs.mapIt( it[1] )
     newnode.add nnkCall.newTree(ident"registerName", newStrLitNode(name))
@@ -751,36 +751,16 @@ proc replaceBracket(node: NimNode): NimNode =
 
 proc replaceOne(one:NimNode):NimNode = 
   case one.kind
-    of nnkLetSection:
-      if one[^1][^1].kind == nnkBracket:
-        var b = nnkLetSection.newTree()
-        copyChildrenTo(one, b)
-        b[^1][^1] = replaceBracket(one[^1][^1])
-        result = b
-      else:
-        result = one
-    of nnkVarSection:
-      if one[^1][^1].kind == nnkBracket:
-        var b = nnkVarSection.newTree()
-        copyChildrenTo(one, b)
-        b[^1][^1] = replaceBracket(one[^1][^1])
-        result = b
-      else:
-        result = one
-    of nnkAsgn:
-      if one[1].kind == nnkBracket:
-        var b = nnkAsgn.newTree()
-        copyChildrenTo(one, b)
-        b[1] = replaceBracket(one[1])
-        result =  b
-      else:
-        result = one
     of nnkBracket:
       result = replaceBracket(one)
-    of nnkDiscardStmt:
-      result = nnkDiscardStmt.newtree(replaceBracket(one[0]))
     else:
-      result = one
+      var b = copyNimNode(one)
+      copyChildrenTo(one, b)
+      var i = 0
+      for a in b:
+        b[i] = replaceOne(a)
+        inc i
+      result = b
 
 macro objcr*(arg: untyped): untyped =
   if arg.kind == nnkStmtList:
