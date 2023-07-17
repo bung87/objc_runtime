@@ -4,11 +4,6 @@ import darwin / [ app_kit, foundation]
 var NSApp {.importc.}: ID
 
 proc main() =
-  func createMenuItem(title: ID | NSString, action: string, key: string): ID =
-    result = objc_msgSend(getClass("NSMenuItem").ID, registerName("alloc"))
-    objc_msgSend(result, registerName("initWithTitle:action:keyEquivalent:"),
-                title, if action != "": registerName(action) else: nil, get_nsstring(key))
-    objc_msgSend(result, registerName("autorelease"))
 
   objcr:
     [NSApplication sharedApplication]
@@ -22,9 +17,7 @@ proc main() =
     var appMenuItem = [[NSMenuItem alloc]init]
     var appMenu = [[NSMenu alloc]init]
 
-    var quitTitle = @"Quit"
-    var quitMenuItem = createMenuItem(quitTitle, "terminate:", "q")
-    [appMenu addItem: quitMenuItem]
+    [appMenu addItemWithTitle: @"Quit", action: "terminate:", keyEquivalent: @"q"]
     [appMenuItem setSubmenu: appMenu]
 
     [menuBar addItem: appMenuItem]
@@ -41,6 +34,7 @@ proc main() =
     [mainWindow makeKeyAndOrderFront: NSApp]
     [NSApp activateIgnoringOtherApps: true]
     [NSApp run]
+    [NSApp stop]
 
 
 when isMainModule:
