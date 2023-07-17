@@ -850,9 +850,16 @@ proc encodeType*[T](t:typedesc[T]):string =
 macro getProcEncode*(y: typed):untyped =
   var x = y.getImpl()
   var j = newCall(bindSym"join")
+  let encode = bindSym"encodeType"
   var ab = nnkBracket.newTree()
+  x.expectKind nnkProcDef
   for p in x.params:
-    ab.add newCall(ident"encodeType",if p.kind == nnkEmpty: ident"void" else: newCall(ident"type", p[1]))
+    if p.kind == nnkIdentDefs:
+      ab.add newCall(encode, newCall(ident"type", p[1]))
+    elif p.kind == nnkEmpty:
+      ab.add newCall(encode, ident"void")
+    elif p.kind == nnkSym:
+      ab.add newCall(encode, newCall(ident"type", p))
   var aseq = nnkPrefix.newTree(ident("@"), ab)
   j.add aseq
   j.add newLit("")
