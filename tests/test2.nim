@@ -10,14 +10,14 @@ when isMainModule:
     objcr:
       var i = [NSNumber numberWithInt:2]
       setIvar(self, NumIvar, i)
-  discard BaseClass.addMethod($$"setNum", cast[IMP](setNum), getProcEncode( setNum))
+  discard BaseClass.addMethod($$"setNum", setNum)
   BaseClass.registerClassPair()
 
   let ChildClass = allocateClassPair(getClass("BaseClass"), "ChildClass", 0)
 
   proc setNum2(self: ID; cmd: SEL;) {.objcr.} =
     discard [super setNum]
-  discard ChildClass.replaceMethod($$"setNum", cast[IMP](setNum2), getProcEncode( setNum2))
+  discard ChildClass.replaceMethod($$"setNum", setNum2)
   ChildClass.registerClassPair()
 
   objcr:

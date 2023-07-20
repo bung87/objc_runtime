@@ -1,16 +1,16 @@
 import objc_runtime
 import darwin / [ app_kit, foundation]
 
-var NSApp {.importc.}: ID
+# var NSApp {.importc.}: ID
 
 proc main() =
 
   objcr:
     [NSApplication sharedApplication]
-
     if NSApp.isNil:
       echo "Failed to initialized NSApplication...  terminating..."
       return
+
     [NSApp setActivationPolicy: NSApplicationActivationPolicyRegular]
 
     var menuBar = [[NSMenu alloc]init]
