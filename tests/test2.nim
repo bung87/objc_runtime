@@ -4,12 +4,11 @@ import darwin / [ app_kit, foundation]
 
 when isMainModule:
   let BaseClass = allocateClassPair(getClass("NSObject"), "BaseClass", 0)
-  discard addIvar(BaseClass, "num", sizeof(int), 1 shl sizeof(int), encodeType(int))
+  discard addIvar(BaseClass, "num", sizeof(int), 1 shl sizeof(int), encodeType(int32))
   let NumIvar: Ivar = getIvar(BaseClass, "num")
   proc setNum(self: ID; cmd: SEL;) {.cdecl.} =
-    objcr:
-      var i = [NSNumber numberWithInt:2]
-      setIvar(self, NumIvar, i)
+    var i = NSNumber.withInt(2'i32) # objcr: [NSNumber numberWithInt:2'i32]
+    setIvar(self, NumIvar, i)
   discard BaseClass.addMethod($$"setNum", setNum)
   BaseClass.registerClassPair()
 
@@ -25,6 +24,7 @@ when isMainModule:
     [base setNum]
     var v = base.getIvar(NumIvar)
     var n = cast[NSNumber](v)
+    echo n.intValue()
     doAssert n.intValue() == 2
 
     var child = [ChildClass new]
