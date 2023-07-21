@@ -19,7 +19,7 @@ proc transformNode(node: NimNode): NimNode =
             declaredCall,
             node
         ),
-        nnkElseExpr.newTree(newCall(ident"ID", nnkCall.newTree(ident"getClass", node.toStrLit)))
+        nnkElseExpr.newTree(nnkCall.newTree(ident"getClass", node.toStrLit))
       )
       )
     else:

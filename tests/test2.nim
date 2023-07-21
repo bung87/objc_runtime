@@ -27,7 +27,7 @@ when isMainModule:
     var n = cast[NSNumber](v)
     doAssert n.intValue() == 2
 
-    var child = [[ChildClass alloc] init]
+    var child = [ChildClass new]
     [child setNum]
     var v2 = child.getIvar(NumIvar)
     var n2 = cast[NSNumber](v2)
