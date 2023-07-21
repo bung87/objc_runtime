@@ -1,8 +1,6 @@
 import objc_runtime
 import darwin / [ app_kit, foundation]
 
-# var NSApp {.importc.}: ID
-
 proc main() =
 
   objcr:
