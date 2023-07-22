@@ -4,8 +4,6 @@ objective-c runtime bindings provide macro `objcr` allow you write message sendi
 
 ``` nim
 
-var NSApp {.importc.}: ID
-
 proc main() =
 
   objcr:
