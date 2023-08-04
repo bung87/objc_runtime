@@ -24,7 +24,6 @@ when isMainModule:
     [base setNum]
     var v = base.getIvar(NumIvar)
     var n = cast[NSNumber](v)
-    echo n.intValue()
     doAssert n.intValue() == 2
 
     var child = [ChildClass new]

@@ -42,7 +42,7 @@ proc extractSelf(self: NimNode, args: var seq[NimNode]): NimNode =
       args.insert(ce)
       return self[0][0]
     else:
-      discard
+      return
   of nnkCommand:
     if self[1].kind == nnkIdent:
       args.insert(nnkCall.newTree(ident"registerName", self[1].toStrLit))
@@ -50,7 +50,7 @@ proc extractSelf(self: NimNode, args: var seq[NimNode]): NimNode =
       args.insert(self[1])
     return self[0]
   else:
-    discard
+    return
   return self
 
 proc replaceBracket(node: NimNode): NimNode =
@@ -61,6 +61,8 @@ proc replaceBracket(node: NimNode): NimNode =
   var self = child[0]
   var args = child[1 .. ^1]
   self = extractSelf(self, args)
+  if self == nil:
+    return node
   if self.kind == nnkIdent and self.strVal == "super":
     newnode = newCall(bindSym"objc_msgSendSuper")
   newnode.add transformNode(self)
@@ -100,29 +102,32 @@ macro objcr*(arg: untyped): untyped =
     result.body = nnkStmtList.newTree()
     result.addPragma ident"cdecl"
     result.addPragma ident"gcsafe"
-    var self = arg.params[1][0]
-    var superVal = nnkObjConstr.newTree(
-    ident("ObjcSuper"),
-      nnkExprColonExpr.newTree(
-        ident("receiver"),
-        self
-      ),
-      nnkExprColonExpr.newTree(
-        ident("superClass"),
-        nnkCall.newTree(
-          nnkDotExpr.newTree(
+    let argLen = arg.params.len
+    if argLen >= 2: 
+      var self = arg.params[1][0]
+      if $self == "self":
+        var superVal = nnkObjConstr.newTree(
+        ident("ObjcSuper"),
+          nnkExprColonExpr.newTree(
+            ident("receiver"),
+            self
+          ),
+          nnkExprColonExpr.newTree(
+            ident("superClass"),
             nnkCall.newTree(
               nnkDotExpr.newTree(
-                self,
-                ident("getClass")
+                nnkCall.newTree(
+                  nnkDotExpr.newTree(
+                    self,
+                    ident("getClass")
+                  )
+                ),
+                ident("getSuperclass")
               )
-            ),
-            ident("getSuperclass")
+            )
           )
         )
-      )
-    )
-    result.body.add nnkVarSection.newTree(nnkIdentDefs.newTree(ident"super",newEmptyNode(),superVal))
+        result.body.add nnkVarSection.newTree(nnkIdentDefs.newTree(ident"super",newEmptyNode(),superVal))
     for one in code:
       result.body.add replaceOne(one)
   else:

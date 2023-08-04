@@ -1,6 +1,6 @@
 # Package
 
-version       = "0.1.6"
+version       = "0.1.7"
 author        = "bung87"
 description   = "objective-c runtime bindings"
 license       = "LGPL-2.1-or-later"
