@@ -13,13 +13,11 @@ proc main() {.objcr.} =
   var menuBar = [[NSMenu alloc]init]
   var appMenuItem = [[NSMenuItem alloc]init]
   var appMenu = [[NSMenu alloc]init]
-
-  [appMenu addItemWithTitle: @"Quit", action: "terminate:", keyEquivalent: @"q"]
+  [appMenu addItemWithTitle: @"Quit", action: $$"terminate:", keyEquivalent: @"q"]
   [appMenuItem setSubmenu: appMenu]
 
   [menuBar addItem: appMenuItem]
   [NSApp setMainMenu: menuBar]
-
   var mainWindow = [NSWindow alloc]
   var rect = NSMakeRect(0, 0, 200, 200)
   [mainWindow initWithContentRect: rect, styleMask:  NSWindowStyleMaskTitled or NSWindowStyleMaskClosable or NSWindowStyleMaskMiniaturizable or NSWindowStyleMaskResizable, backing: NSBackingStoreBuffered,
@@ -27,7 +25,7 @@ proc main() {.objcr.} =
 
   var pos = NSMakePoint(20,20)
   [mainWindow cascadeTopLeftFromPoint: pos]
-  [mainWindow setTitle: "Hello"]
+  [mainWindow setTitle: @"Hello"]
   [mainWindow makeKeyAndOrderFront: NSApp]
   [NSApp activateIgnoringOtherApps: true]
   [NSApp run]

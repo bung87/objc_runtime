@@ -3,25 +3,24 @@ import darwin / objc / runtime
 
 export runtime
 
+type TransKind = enum
+  kSelf,
+  kArg,
+
 proc replaceBracket(node: NimNode): NimNode
 
-template isIDCheck(a: untyped): untyped = (when declared(a): a is ID else: false)
+# template isIDCheck(a: untyped): untyped = (when declared(a): a is ID else: false)
+template getClassByIdent(a: untyped, s: string): untyped = (when declared(a) and a is ID: a else: getClass(s))
 
-proc transformNode(node: NimNode): NimNode =
-  let isIDCheck = bindSym("isIDCheck", brClosed)
+proc transformNode(node: NimNode, kind: TransKind): NimNode =
+  let getClassByIdent = bindSym("getClassByIdent", brClosed)
   if node.kind == nnkIdent:
     var m: RegexMatch
     if node.strVal.match(re"^[A-Z]+\w+", m):
-      let declaredCall = nnkCall.newTree(isIDCheck, node)
-      return nnkStmtListExpr.newTree(
-        nnkWhenStmt.newTree(
-          nnkElifExpr.newTree(
-            declaredCall,
-            node
-        ),
-        nnkElseExpr.newTree(nnkCall.newTree(ident"getClass", node.toStrLit))
-      )
-      )
+      if kind == kSelf:
+        result = nnkCall.newTree(getClassByIdent, node, node.toStrLit)
+      else:
+        return node
     else:
       return node
   elif node.kind == nnkStrLit:
@@ -65,17 +64,17 @@ proc replaceBracket(node: NimNode): NimNode =
     return node
   if self.kind == nnkIdent and self.strVal == "super":
     newnode = newCall(bindSym"objc_msgSendSuper")
-  newnode.add transformNode(self)
+  newnode.add transformNode(self, kSelf)
   var positionalArgs = args.filterIt(it.kind != nnkExprColonExpr)
   for pa in positionalArgs:
-    newnode.add transformNode(pa)
+    newnode.add transformNode(pa, kArg)
   var namedArgs = args.filterIt(it.kind == nnkExprColonExpr)
   if namedArgs.len > 0:
     var names = namedArgs.mapIt(if it[0].kind != nnkAccQuoted : it[0].strVal() else: it[0][0].strVal())
     let name = names.join(":") & ":"
     newnode.add nnkCall.newTree(ident"registerName", newStrLitNode(name))
     for a in namedArgs:
-      newnode.add transformNode(a[1])
+      newnode.add transformNode(a[1], kArg)
   return newnode
 
 proc replaceOne(one:NimNode):NimNode = 
