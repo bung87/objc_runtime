@@ -1,4 +1,4 @@
-import macros, regex, sequtils, strutils
+import std/[macros, sequtils, strutils]
 import darwin / objc / runtime
 
 export runtime
@@ -15,8 +15,7 @@ template getClassByIdent(a: untyped, s: string): untyped = (when declared(a) and
 proc transformNode(node: NimNode, kind: TransKind): NimNode =
   let getClassByIdent = bindSym("getClassByIdent", brClosed)
   if node.kind == nnkIdent:
-    var m: RegexMatch
-    if node.strVal.match(re"^[A-Z]+\w+", m):
+    if node.strVal[0] in UppercaseLetters and node.strVal.toOpenArray(1, node.strVal.len - 1).all(isAlphaAscii):
       if kind == kSelf:
         result = nnkCall.newTree(getClassByIdent, node, node.toStrLit)
       else:
@@ -49,8 +48,7 @@ proc extractSelf(self: NimNode, args: var seq[NimNode]): NimNode =
       args.insert(self[1])
     return self[0]
   else:
-    return
-  return self
+    return self
 
 proc replaceBracket(node: NimNode): NimNode =
   if node.kind != nnkBracket:
