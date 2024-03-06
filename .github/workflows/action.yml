@@ -37,9 +37,9 @@ jobs:
         key: ${{ runner.os }}-nimble-${{ matrix.version}}-${{ hashFiles('*.nimble') }}
 
     - uses: alaviss/setup-nim@0.1.1
-        with:
-          path: 'nim'
-          version: ${{ matrix.version }}
+      with:
+        path: 'nim'
+        version: ${{ matrix.version }}
     - name: Test
       continue-on-error: ${{ matrix.version == 'devel' }}
       run: |
