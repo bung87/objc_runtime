@@ -16,7 +16,7 @@ jobs:
         os:
           - macOS-latest
         version:
-          - binary:stable
+          - version-2-0
           - devel
     steps:
     - name: Checkout
@@ -36,9 +36,10 @@ jobs:
         path: ~/.nimble
         key: ${{ runner.os }}-nimble-${{ matrix.version}}-${{ hashFiles('*.nimble') }}
 
-    - uses: iffy/install-nim@v5
-      with:
-        version: ${{ matrix.version }}
+    - uses: alaviss/setup-nim@0.1.1
+        with:
+          path: 'nim'
+          version: ${{ matrix.version }}
     - name: Test
       continue-on-error: ${{ matrix.version == 'devel' }}
       run: |
