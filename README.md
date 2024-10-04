@@ -2,6 +2,8 @@
 
 objective-c runtime bindings provide macro `objcr` allow you write message sending style code  
 
+NOTICE: This library works fine on x86, If you are using this library on an ARM64 architecture (such as Apple Silicon), please be aware that `objc_msgSend` requires properly typed signatures. On x86, this function works without strict type conversion, but on ARM64, failing to cast the function correctly will lead to runtime crashes.
+
 ``` nim
 
 proc main() =
